@@ -3,23 +3,37 @@ import { dummyBookingData } from '../../assets/assets';
 import Title from '../../components/admin/Title';
 import Loading from '../../components/Loading';
 import { dateFormat } from '../../lib/DateFormat';
+import { useAppContext } from '../../context/AppContext';
 
 const ListBookings = () => {
 
   const currency = import.meta.env.VITE_CURRENCY 
+
+  const {axios, getToken, user} = useAppContext()
+  
   
     const[Bookings, setBookings] = useState([]);
   
     const [isloading,setIsLoading] = useState(true);
 
     const getAllBookings = async() => {
-      setBookings(dummyBookingData)
-      setIsLoading(false);
+      try{
+         const {data} = await axios.get('api/admin/all-bookings',{
+        headers : {Authorization: `Bearer ${await getToken()}`}
+      });
+      setBookings(data.Bookings)
+      }catch(error){
+        console.error(error);
+         
+      }
+      setIsLoading(false)
     };
 
     useEffect(()=>{
+      if(user){
       getAllBookings();
-    },[]);
+      }
+    },[user]);
   
   return !isloading ?(
     <>
