@@ -2,6 +2,8 @@
 import Booking from "../models/Bookings.js";
 import Show from "../models/Show.js"
 import stripe from 'stripe'
+import { getAuth } from '@clerk/express'; // ✅ Required for Clerk
+
 
 // Availability of selected seats
 
@@ -114,3 +116,26 @@ export const getOccupiedSeats = async (req,res)=>{
         res.json({success:false,message:error.message})
     }
 }
+
+
+export const getUserBookings = async (req, res) => {
+  try {
+    const { userId } = getAuth(req) ;// ✅ Fix: properly extract Clerk userId
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const bookings = await Booking.find({ user: userId })
+      .populate({
+        path: 'show',
+        populate: { path: 'movie' }
+      });
+
+    res.json({ success: true, bookings });
+  } catch (error) {
+    console.error('Error fetching user bookings:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
